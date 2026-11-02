@@ -20,7 +20,7 @@ import './styles.css';
 const WEDDING_TARGET = new Date('2026-11-22T12:15:00+05:30');
 
 // Music Sources (Auspicious wedding music)
-const MUSIC_MP4_SRC = '/assets/music.mp4';
+const MUSIC_MP4_SRC = '/assets/wedding-bgm.mp4';
 const FALLBACK_MUSIC_SRC = '/assets/wedding-music.mp3';
 
 // Sacred Artwork Assets
@@ -48,6 +48,20 @@ const ARTWORKS = [
     badge: 'Wedding Rituals',
     src: '/assets/traditional-kalyana-homa.jpg',
     description: 'Traditional painting of Lord Vishnu and Goddess Jaya Lakshmi around the sacred wedding fire and deepas.'
+  }
+];
+
+// Couple Photo Gallery
+const GALLERY_PHOTOS = [
+  {
+    src: '/assets/gallery/gallery-3-picnic-laughter.jpg',
+    alt: 'Lakshmi & Shrinivas laughing together during a joyful picnic under a tree',
+    caption: 'Picnic Laughter'
+  },
+  {
+    src: '/assets/gallery/gallery-1-red-glamour.jpg',
+    alt: 'Lakshmi & Shrinivas dressed up for an evening celebration',
+    caption: 'Evening Glamour'
   }
 ];
 
@@ -304,6 +318,19 @@ function App() {
   const [rsvpMessage, setRsvpMessage] = useState('');
   const [rsvpSubmitted, setRsvpSubmitted] = useState(false);
 
+  // Photo Gallery Lightbox State
+  const [galleryLightbox, setGalleryLightbox] = useState<number | null>(null);
+
+  // Close gallery lightbox with the Escape key
+  useEffect(() => {
+    if (galleryLightbox === null) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setGalleryLightbox(null);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [galleryLightbox]);
+
   const { scrollYProgress } = useScroll();
   const reduceMotion = useReducedMotion();
 
@@ -429,20 +456,14 @@ function App() {
               <div className="welcome-names-wrapper">
                 <div className="welcome-person">
                   <h1>Lakshmi</h1>
-                  <p className="welcome-parents">Daughter of Shri Manjunath Gangal & Smt. Sunita Gangal</p>
                 </div>
                 <span className="welcome-amp">&</span>
                 <div className="welcome-person">
                   <h1>Shrinivas</h1>
-                  <p className="welcome-parents">Son of Shri Shripad Sawkar & Smt. Nalina Sawkar</p>
                 </div>
               </div>
 
               <p className="invite-text">cordially invite you to celebrate our wedding</p>
-
-              <div className="dates-chip">
-                <span>21 · 22 November 2026</span>
-              </div>
 
               <motion.button
                 className="open-card-btn"
@@ -503,26 +524,6 @@ function App() {
           <h1 className="hero-names">
             Lakshmi <span className="and">&</span> Shrinivas
           </h1>
-
-          {/* Parents Name Tribute in Hero */}
-          <div className="hero-parents-tribute">
-            <div className="hero-parent-item">
-              <span className="parent-role">Bride</span>
-              <span className="parent-desc">Daughter of <strong>Shri Manjunath Gangal</strong> & <strong>Smt. Sunita Gangal</strong></span>
-            </div>
-            <span className="hero-parent-sep">✦</span>
-            <div className="hero-parent-item">
-              <span className="parent-role">Groom</span>
-              <span className="parent-desc">Son of <strong>Shri Shripad Sawkar</strong> & <strong>Smt. Nalina Sawkar</strong></span>
-            </div>
-          </div>
-
-          <div className="hero-dates-strip" style={{ marginTop: '14px' }}>
-            <i />
-            <span>21 · 22 November 2026</span>
-            <i />
-          </div>
-          <div className="hero-locations">Bagalkot, Karnataka</div>
         </motion.div>
 
         {/* Main Divine Portrait Frame with Interactive Movement & Shimmer */}
@@ -676,12 +677,39 @@ function App() {
           <p className="story-body-text">
             When two souls are drawn together by divine destiny, every ritual becomes a sacred blessing.
             Carrying the auspicious names of Goddess Mahalakshmi and Lord Srinivasa, our journey begins
-            with sacred promises, traditional values, and the cherished blessings of our parents — 
-            <strong> Shri Manjunath Gangal & Smt. Sunita Gangal</strong> and 
-            <strong> Shri Shripad Sawkar & Smt. Nalina Sawkar</strong>.
+            with sacred promises, traditional values, and the cherished blessings of our parents.
           </p>
           <div className="couple-signatures">Lakshmi & Shrinivas</div>
         </div>
+      </section>
+
+      {/* PHOTO GALLERY (Couple Moments) */}
+      <section className="gallery-section">
+        <p className="section-kicker">Moments of Joy</p>
+        <h2 className="section-heading">Our Photo Gallery</h2>
+        <div className="gallery-grid">
+          {GALLERY_PHOTOS.map((photo, idx) => (
+            <motion.div
+              key={photo.src}
+              className="gallery-item"
+              role="button"
+              tabIndex={0}
+              aria-label={`View photo: ${photo.caption}`}
+              onClick={() => setGalleryLightbox(idx)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') setGalleryLightbox(idx);
+              }}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.6, delay: idx * 0.12 }}
+            >
+              <img src={photo.src} alt={photo.alt} loading="lazy" />
+              <span className="gallery-item-caption">{photo.caption}</span>
+            </motion.div>
+          ))}
+        </div>
+        <p className="gallery-hint">Tap a photo to view it larger</p>
       </section>
 
       {/* WEDDING CEREMONY & SACRED AGNI (Photo 3: Traditional Kalyana Homa) */}
@@ -940,6 +968,39 @@ function App() {
           </p>
         </div>
       </footer>
+
+      {/* PHOTO GALLERY LIGHTBOX */}
+      <AnimatePresence>
+        {galleryLightbox !== null && (
+          <motion.div
+            className="gallery-lightbox"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setGalleryLightbox(null)}
+          >
+            <button
+              className="gallery-lightbox-close"
+              onClick={() => setGalleryLightbox(null)}
+              aria-label="Close photo"
+            >
+              ✕
+            </button>
+            <motion.img
+              src={GALLERY_PHOTOS[galleryLightbox].src}
+              alt={GALLERY_PHOTOS[galleryLightbox].alt}
+              initial={{ scale: 0.92, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.92, opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              onClick={(e) => e.stopPropagation()}
+            />
+            <span className="gallery-lightbox-caption">
+              {GALLERY_PHOTOS[galleryLightbox].caption}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* BLESSINGS POPUP MODAL */}
       <AnimatePresence>
